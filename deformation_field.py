@@ -351,4 +351,4 @@ if __name__ == '__main__':
     anal = RegisterDeformations(parameters='parameterMap.txt', data='./data/data_small')
     anal.crop_images(200, 600, 150, 600)
     anal.get_displacements()
-    anal.save_gif(anal.deformation_field_Y, name='deformation_Y')
+    anal.save_gif(anal.deformation_field_Y, save_name='deformation_Y')
