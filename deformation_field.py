@@ -101,7 +101,7 @@ class RegisterDeformations():
     
             #  zahájení celé registrace
             elastixImageFilter = sitk.ElastixImageFilter()
-            elastixImageFilter.LogToFileOn()
+            #elastixImageFilter.LogToFileOn()
             # nastavení snímků
             elastixImageFilter.SetFixedImage(fixed_img)
             elastixImageFilter.SetMovingImage(moving_img)
@@ -197,14 +197,14 @@ class RegisterDeformations():
             self.strain_fields_XY[i+1,:,:] = 0.5*(dudy + dvdx + dudy*dudy + dvdx*dvdy)
     
     @staticmethod    
-    def for_imageJ(image1, image2):
+    def for_imageJ(image1: np.ndarray, image2: np.ndarray) -> None:
         """ První obrázek je originál nahraný a měl by být i+1 oproti obrazu dva, který
             je zase zdeformovaný pomocí IR. Při kontrole v ImageJ originální deformace bych
             měl vždy kontrolovat právě image1 s obrazem o číslo menší. Jelikož i-1 deformuji."""
         cv2.imwrite("for_imageJ_0.tif", image1)
         cv2.imwrite("for_imageJ_1.tif", image2)
         
-    def create_mask(self, characteristics, limit):
+    def create_mask(self, characteristics: np.ndarray, limit: float) -> np.ndarray:
         """Tato funkce vykreslí výsledky zvolené veličiny na vzorku nedeformovaném,
             který je oříznut pomocí masky. Maska byla vytvořena pomocí imageJ. Limit
             je zde jenom z toho důvodu, že jsou tam místy lokální extrémy bodové, které
@@ -216,7 +216,7 @@ class RegisterDeformations():
         masked[masked > limit] = np.nan 
         return masked
     
-    def plot_masked(self, masked, name = None):
+    def plot_masked(self, masked: np.ndarray, name = None) -> None:
         plt.figure()
         plt.imshow(self.images[0, :,:], cmap = "gray")    # default image
         im = plt.imshow(masked, alpha = 0.7, cmap = "jet")
@@ -228,12 +228,15 @@ class RegisterDeformations():
         else:
             plt.show()
             
-    def save_gif(self, characteristics): 
+    def save_gif(self, characteristics, save_name = None) -> None: 
         images = []    # save image names for subsequent delete
-        char_name = f'{characteristics}'.split('=')[0]
+        if save_name is not None:
+            char_name = save_name
+        else:
+            char_name = "saved"
         with imageio.get_writer(f"{char_name}.gif", mode="I") as writer:
             for i, image in enumerate(tqdm(characteristics, desc="Processing masked images")):
-                plot_masked(self.create_mask(image, 100), name = f"saved_image_{i}")
+                self.plot_masked(self.create_mask(image, 100), name = f"saved_image_{i}")
                 images.append(f"saved_image_{i}.tif")
                 image = imageio.imread(f"saved_image_{i}.tif")
                 writer.append_data(image)
