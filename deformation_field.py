@@ -8,17 +8,20 @@ between two images. Dformation is aggregated if it is used to analyze deformatio
 mechanical testing. Subsequently, strain field can be calculated from the deformations. 
 """
 
+import os
+from typing import Optional
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import SimpleITK as sitk
 import pandas as pd
 import skimage.io as sk
-from pathlib import Path
 import cv2
-import os
 from scipy import ndimage
 from tqdm import tqdm
 import imageio
+from scipy.io import savemat
 
 
 class RegisterDeformations():
@@ -346,7 +349,30 @@ class RegisterDeformations():
                 path = Path(f"./saved_image_{i}.tif")
                 path.unlink()
 
+    @staticmethod
+    def save_as_mat(data, name: Optional[str] = None) -> None:
+        '''
         
+
+        Parameters
+        ----------
+        data : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None
+            DESCRIPTION.
+
+        '''
+        if name is not None:
+            dict_to_save = {f'{name}': data}
+            savemat(f'{name}.mat', dict_to_save)
+        else:
+            dict_to_save = {'numpy.array': data}
+            savemat(f'{name}.mat', dict_to_save)
+            
+
 if __name__ == '__main__':
     anal = RegisterDeformations(parameters='parameterMap.txt', data='./data/data_small')
     anal.crop_images(200, 600, 150, 600)
