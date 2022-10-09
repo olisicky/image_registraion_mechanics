@@ -28,6 +28,7 @@ class RegisterDeformations():
     def __init__(self, parameters, data):
         self.PATH_PARAMETERS = Path(parameters)
         self.PATH_DATA = Path(data)
+        self.image_names = []
         self.images = self.load_images()
         self.deformed_images = np.empty([self.images.shape[0], self.images.shape[1], self.images.shape[2]])
         self.strain_fields_XX = np.empty([self.images.shape[0] + 1, self.images.shape[1], self.images.shape[2]])
@@ -87,15 +88,20 @@ class RegisterDeformations():
             DESCRIPTION. Input images in stack.
         '''
 
-        images =  []
         for file in os.listdir(self.PATH_DATA):
             if file.endswith(".tif"):
-                images.append(file)
-        shape = sk.imread(self.PATH_DATA / images[0]).shape    # get shape of initial image
-        stack = np.empty((len(images), shape[0], shape[1]))
-        for i, image in enumerate(tqdm(images, desc="Loading images")):
+                self.image_names.append(file)
+        shape = sk.imread(self.PATH_DATA / self.image_names[0]).shape    # get shape of initial image
+        stack = np.empty((len(self.image_names), shape[0], shape[1]), dtype="int16")
+        for i, image in enumerate(tqdm(self.image_names, desc="Loading images")):
             stack[i, :, :] = sk.imread(self.PATH_DATA / image)
+        print(self.image_names)
         return stack
+        
+    def denoise(self) -> None:
+        cv2_uint8 = [cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8UC1) for img in self.images]
+        dst = [cv2.fastNlMeansDenoising(img, None, 7) for img in cv2_uint8]
+        self.images = np.array(dst)
         
     def get_displacements(self) -> np.ndarray:
         '''
@@ -238,20 +244,15 @@ class RegisterDeformations():
             self.strain_fields_YY[i+1,:,:] = 1/2*(2*dvdy + (dudy)**2 + (dvdy)**2)
             self.strain_fields_XY[i+1,:,:] = 0.5*(dudy + dvdx + dudy*dudy + dvdx*dvdy)
     
-    @staticmethod    
-    def for_imageJ(image1: np.ndarray, image2: np.ndarray) -> None:
+    def for_imageJ(self, index: int) -> None:
         '''
         Saves two images which can be than compared e.g., in ImageJ with stack animation or
         with colour overlay. This is much easier in ImageJ.
 
         Parameters
         ----------
-        image1 : np.ndarray
-            DESCRIPTION. This should be from original images -> self.images with indice i+1
-            compared to image2 which is deformed image from image registration.
-        image2 : np.ndarray
-            DESCRIPTION. Deformed image from image registration -> self.deformed_images with
-            indice i.
+        index : int
+            DESCRIPTION. Image index which will be saved. Should be within input images size.
 
         Returns
         -------
@@ -259,13 +260,9 @@ class RegisterDeformations():
             DESCRIPTION. Saves two images for comparison.
 
         '''
-        
-        
-        """ První obrázek je originál nahraný a měl by být i+1 oproti obrazu dva, který
-            je zase zdeformovaný pomocí IR. Při kontrole v ImageJ originální deformace bych
-            měl vždy kontrolovat právě image1 s obrazem o číslo menší. Jelikož i-1 deformuji."""
-        cv2.imwrite("for_imageJ_0.tif", image1)
-        cv2.imwrite("for_imageJ_1.tif", image2)
+        assert (index - 1) < len(self.image_names)
+        cv2.imwrite("for_imageJ_0.tif", self.images[index + 1, :, :])
+        cv2.imwrite("for_imageJ_1.tif", self.deformed_images[index, :, :])
         
     def create_mask(self, characteristics: np.ndarray, limit: float) -> np.ndarray:
         '''
@@ -374,7 +371,8 @@ class RegisterDeformations():
             
 
 if __name__ == '__main__':
-    anal = RegisterDeformations(parameters='parameterMap.txt', data='./data/data_small')
-    anal.crop_images(200, 600, 150, 600)
+    anal = RegisterDeformations(parameters='parameterMap.txt', data='./data/c4')
+    anal.crop_images(250, 550, 250, 520)
+    # anal.denoise()
     anal.get_displacements()
     anal.save_gif(anal.deformation_field_Y, save_name='deformation_Y')
