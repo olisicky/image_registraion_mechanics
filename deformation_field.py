@@ -369,6 +369,14 @@ class RegisterDeformations():
             dict_to_save = {'numpy.array': data}
             savemat(f'{name}.mat', dict_to_save)
             
+    def plot_mean(self, characteristics: np.ndarray) -> None:
+        fig, ax = plt.subplots()
+        mean = [img.mean() for img in characteristics]
+        ax.plot(mean, label = "Mean response")
+        ax.set_xlabel("Time [N/A]")
+        ax.set_ylabel("Mean displacement")
+        plt.title()
+            
 
 if __name__ == '__main__':
     anal = RegisterDeformations(parameters='parameterMap.txt', data='./data/c4')
@@ -376,3 +384,6 @@ if __name__ == '__main__':
     # anal.denoise()
     anal.get_displacements()
     anal.save_gif(anal.deformation_field_Y, save_name='deformation_Y')
+    
+    
+
