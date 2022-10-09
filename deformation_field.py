@@ -375,7 +375,6 @@ class RegisterDeformations():
         ax.plot(mean, label = "Mean response")
         ax.set_xlabel("Time [N/A]")
         ax.set_ylabel("Mean displacement")
-        plt.title()
             
 
 if __name__ == '__main__':
