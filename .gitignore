@@ -1,13 +1,9 @@
 elastix.log
 transformix.log
-for_imageJ_0.tif
-for_imageJ_1.tif
-IterationInfo.0.R0.txt
-IterationInfo.0.R1.txt
-IterationInfo.0.R2.txt
+for_imageJ_*.tif
+IterationInfo.0.**.txt
 outputpoints.txt
 points.pts
 TransformParameters.0.txt
-TransformParameters.0.R0.txt
-TransformParameters.0.R1.txt
-TransformParameters.0.R2.txt
+TransformParameters.0.**.txt
+steps.txt

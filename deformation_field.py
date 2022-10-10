@@ -9,6 +9,7 @@ mechanical testing. Subsequently, strain field can be calculated from the deform
 """
 
 import os
+from tkinter import NONE
 from typing import Optional
 from pathlib import Path
 
@@ -91,6 +92,7 @@ class RegisterDeformations():
         for file in os.listdir(self.PATH_DATA):
             if file.endswith(".tif"):
                 self.image_names.append(file)
+        self.image_names = sorted(self.image_names)    # it was sorted on win but on mac not.
         shape = sk.imread(self.PATH_DATA / self.image_names[0]).shape    # get shape of initial image
         stack = np.empty((len(self.image_names), shape[0], shape[1]), dtype="int16")
         for i, image in enumerate(tqdm(self.image_names, desc="Loading images")):
@@ -375,10 +377,22 @@ class RegisterDeformations():
         ax.plot(mean, label = "Mean response")
         ax.set_xlabel("Time [N/A]")
         ax.set_ylabel("Mean displacement")
-            
+
+    def get_time_steps(self, time_step: Optional[float] = None, save_steps: bool = False) -> list:
+        steps = []
+        for name in self.image_names:
+            steps.append(int(name.split('_')[0]))
+        if time_step is not None:
+            steps = steps * time_step
+        if save_steps:
+            with open('steps.txt', 'w') as f:
+                for step in steps:
+                    f.write(f"{step}\n")
+        return steps 
 
 if __name__ == '__main__':
     anal = RegisterDeformations(parameters='parameterMap.txt', data='./data/c4')
+    anal.get_time_steps(save_steps=True)
     anal.crop_images(250, 550, 250, 520)
     # anal.denoise()
     anal.get_displacements()
